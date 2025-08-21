@@ -172,7 +172,13 @@ install_redhat_packages() {
     else
        echo "Unable to find 'tdnf', 'dnf', or 'yum' package manager. Exiting."
        exit 1
-fi
+    fi
+
+    if [[ ${install_cmd} = "microdnf" ]; then
+        installed_query="${install_cmd} repoquery"
+    else
+        installed_query="${install_cmd} -q list"
+    fi
 
     if [ "${PACKAGES_ALREADY_INSTALLED}" != "true" ]; then
         package_list="${package_list} \
@@ -213,12 +219,12 @@ fi
         fi
 
         # Install OpenSSL 1.0 compat if needed
-        if ${install_cmd} -q list compat-openssl10 >/dev/null 2>&1; then
+        if ${installed_query} compat-openssl10 >/dev/null 2>&1; then
             package_list="${package_list} compat-openssl10"
         fi
 
         # Install lsb_release if available
-        if ${install_cmd} -q list redhat-lsb-core >/dev/null 2>&1; then
+        if ${installed_query} redhat-lsb-core >/dev/null 2>&1; then
             package_list="${package_list} redhat-lsb-core"
         fi
 
@@ -228,7 +234,7 @@ fi
         fi
 
         # Install EPEL repository if needed (required to install 'jq' for CentOS)
-        if ! ${install_cmd} -q list jq >/dev/null 2>&1; then
+        if ! ${installed_query} jq >/dev/null 2>&1; then
             ${install_cmd} -y install epel-release
             remove_epel="true"
         fi
